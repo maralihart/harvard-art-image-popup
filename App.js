@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, {Component} from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, Image, Button } from 'react-native';
 
 class App extends Component {
   constructor(props) {
@@ -8,43 +8,42 @@ class App extends Component {
     this.state = {
       link: "",
       loaded: false,
+      imageId: 0,
     };
-  }
-
-  componentDidMount() {
-    try {
-     const apiKey = 'cbf5f6b7-1b5b-4add-a089-1eff3393613b';
-     const response = fetch('https://api.harvardartmuseums.org/image?size=1&apikey='+apiKey)
-      .then(response => response.json())
-      .then((responseJson) => {
-        imageLink = 'https://ids.lib.harvard.edu/ids/view/' + responseJson.records[0].imageid
-        this.setState({link: imageLink, loaded: true});
-        console.log("state is set", this.state.link, this.state.loaded, responseJson.records[0])
-        return true;
-      })
-   } catch(err) {
-     console.log("Error fetching data -------", err);
-   }
   }
 
   render() {
     const { link, loaded } = this.state;
-
-    console.log("state", this.state)
     if (loaded) {
-      console.log("link", link)
       return(
         <View style={styles.container}>
+          <Button onPress={this.removeImage} title="Remove Image" />
           <Image style={styles.image} source={{ uri: link }} title="Image"/> 
         </View>
       );
     } else {
       return(
         <View style={styles.container}>
-          <Text>Image Loading</Text>
+          <Button onPress={this.generateImage} title="Generate Image" />
         </View>
       );
     }
+  }
+
+  generateImage = () => {
+    const apiKey = 'cbf5f6b7-1b5b-4add-a089-1eff3393613b';
+    const response = fetch('https://api.harvardartmuseums.org/image?size=1&apikey='+apiKey)
+      .then(response => response.json())
+      .then((responseJson) => {
+        const imageId = responseJson.records[0].imageid
+        const imageLink = 'https://ids.lib.harvard.edu/ids/view/' + imageId
+        this.setState({link: imageLink, loaded: true, imageId: imageId});
+        console.log("state is set", this.state.link, this.state.loaded, responseJson.records[0])
+      }).catch(err => { console.log("Error fetching data -------", err) });
+  }
+
+  removeImage = () => {
+    this.setState({loaded: false});
   }
 };
 
